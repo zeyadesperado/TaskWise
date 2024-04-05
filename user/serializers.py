@@ -4,7 +4,7 @@ from . import models
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=models.User
-        fields=['email','name','password']
+        fields=['id','email','name','password']
         extra_kwargs={
             'password':{
                 'write_only':True,
@@ -21,3 +21,4 @@ class UserSerializer(serializers.ModelSerializer):
             password= validated_data.pop('password')
             instance.set_password(password)
         return super().update(instance,validated_data)
+    
