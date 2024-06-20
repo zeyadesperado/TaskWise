@@ -4,8 +4,8 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
-from.serializers import UserSerializer, AuthTokenSerializer
-from .models import User
+from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer
+from .models import User, Project
 from . import permissions
 
 
@@ -19,5 +19,21 @@ class UserLoginApiView(ObtainAuthToken):
     serializer_class = AuthTokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
-class ProjectViewSet():
-    """"""
+class ManageUserView(generics.RetrieveUpdateAPIView):
+    """Manage the authenticated user."""
+    serializer_class = UserSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        """Retrive and return the authenticated user"""
+        return self.request.user
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    """Viewset for project"""
+
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]

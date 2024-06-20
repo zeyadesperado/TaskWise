@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=models.User
-        fields=['email','name','password']
+        fields=['id','email','name','password']
         extra_kwargs={
             'password':{
                 'write_only':True,
@@ -46,3 +46,18 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+class ProjectSerializer(serializers.ModelSerializer):
+    # memebers by email
+    # in get or retrieve only for related user
+    leader = UserSerializer(required = False)
+    class Meta:
+        model = models.Project
+        fields = ['id', "name", "description", "leader", "deadline", "memebers", "created"]
+
+    def create(self, validated_data):
+            # Set the 'leader' field to the current authenticated user
+            validated_data['leader'] = self.context['request'].user
+            project = models.Project.objects.create(**validated_data)
+            return project
+

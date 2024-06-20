@@ -37,16 +37,18 @@ class User(AbstractBaseUser,PermissionsMixin):
     #Setting the required field that the superuser has to enter
     REQUIRED_FIELDS = ('name',)
     def __str__(self):
-        return self.email
+        return self.name
 
 class Project(TimeStampedModel):
-    name= models.CharField(max_length=250)
-    description= models.TextField()
-    leader= models.ForeignKey(User, on_delete=models.CASCADE)
-    deadline= models.DateTimeField(blank=True)
+    name = models.CharField(max_length=250)
+    description = models.TextField()
+    leader = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    deadline = models.DateTimeField(blank=True, null=True)
+    memebers = models.ManyToManyField(User, related_name='projects', blank=True)
+
 class Task(TimeStampedModel):
     name = models.CharField(max_length=250)
     description= models.TextField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    deadline= models.DateTimeField(blank=True)
+    deadline= models.DateTimeField(blank=True,)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
