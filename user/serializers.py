@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from . import models
+from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=models.User
-        fields=['id','email','name','password']
+        fields=['email','name','password']
         extra_kwargs={
             'password':{
                 'write_only':True,
@@ -21,4 +22,27 @@ class UserSerializer(serializers.ModelSerializer):
             password= validated_data.pop('password')
             instance.set_password(password)
         return super().update(instance,validated_data)
-    
+
+class AuthTokenSerializer(serializers.Serializer):
+    """Serializer for the user auth token."""
+    email = serializers.EmailField()
+    password = serializers.CharField(
+        style={'input_type': 'password'},
+        trim_whitespace=False,
+    )
+
+    def validate(self, attrs):
+        """Validate and authenticate the user."""
+        email = attrs.get('email')
+        password = attrs.get('password')
+        user = authenticate(
+            request=self.context.get('request'),
+            username=email,
+            password=password,
+        )
+        if not user:
+            msg = ('Unable to authenticate with these credentials')
+            raise serializers.ValidationError(msg, code='authorization')
+
+        attrs['user'] = user
+        return attrs
