@@ -39,11 +39,14 @@ class User(AbstractBaseUser,PermissionsMixin):
     def __str__(self):
         return self.email
 
-
-class Project(models.Model):
-    name= models.CharField(max_length=100)
+class Project(TimeStampedModel):
+    name= models.CharField(max_length=250)
     description= models.TextField()
     leader= models.ForeignKey(User, on_delete=models.CASCADE)
     deadline= models.DateTimeField(blank=True)
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+class Task(TimeStampedModel):
+    name = models.CharField(max_length=250)
+    description= models.TextField()
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    deadline= models.DateTimeField(blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
