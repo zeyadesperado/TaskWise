@@ -74,7 +74,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('.env') #had to do this
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
