@@ -6,8 +6,9 @@ from rest_framework.generics import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from user.permissions import IsLeader
-from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer
+from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer
 from .models import User, Project
+from rest_framework.parsers import MultiPartParser,FormParser
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -22,7 +23,8 @@ class UserLoginApiView(ObtainAuthToken):
 
 class ManageUserView(generics.RetrieveUpdateAPIView):
     """Manage the authenticated user."""
-    serializer_class = UserSerializer
+    serializer_class = ManageUserSerializer
+    parser_classes= [MultiPartParser,FormParser]
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 

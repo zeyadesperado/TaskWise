@@ -23,6 +23,24 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         return super().update(instance,validated_data)
 
+class ManageUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=User
+        fields=['id','email','name','password','resume_file']
+        extra_kwargs={
+            'password':{
+                'write_only':True,
+                'style':{
+                    'input_type':'password'
+                }
+            }
+        }
+    def update(self,instance,validated_data):
+        if 'password' in validated_data:
+            password= validated_data.pop('password')
+            instance.set_password(password)
+        return super().update(instance,validated_data)
+
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user auth token."""
     email = serializers.EmailField()
