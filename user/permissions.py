@@ -1,5 +1,10 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-class ViewOnlyProfile(permissions.BasePermission):
+class IsLeader(BasePermission):
+    """Permission class to check if the request user is the leader of the project."""
+
     def has_object_permission(self,request,view,obj):
-        return obj.id == request.user.id
+        if request.method in SAFE_METHODS:
+            return True
+
+        return request.user == obj.leader

@@ -5,6 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
+from user.permissions import IsLeader
 from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer
 from .models import User, Project
 
@@ -34,7 +35,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     """Viewset for project"""
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsLeader]
     authentication_classes = [TokenAuthentication]
 
     def perform_create(self, serializer):
