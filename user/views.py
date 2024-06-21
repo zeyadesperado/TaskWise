@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import viewsets, generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
@@ -6,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer
 from .models import User, Project
-from . import permissions
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -32,8 +32,18 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 
 class ProjectViewSet(viewsets.ModelViewSet):
     """Viewset for project"""
-
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
+
+    def perform_create(self, serializer):
+        """assign the user created the object as the Leader."""
+        serializer.save(leader=self.request.user)
+
+    def get_queryset(self):
+        """Return projects for the authenticated user as leader or member."""
+        user = self.request.user
+        return Project.objects.filter(
+            Q(leader=user) | Q(members=user)
+        ).distinct()
