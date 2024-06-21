@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager,AbstractBaseUser,PermissionsMixin
 from django_extensions.db.models import TimeStampedModel
-from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .convert_resume import convert_file_to_text
 
 class UserManager(BaseUserManager):
     def create_user(self,email,name,password):
@@ -40,6 +42,8 @@ class User(AbstractBaseUser,PermissionsMixin):
     REQUIRED_FIELDS = ('name',)
     def __str__(self):
         return self.name
+        
+    
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=250)
@@ -54,3 +58,16 @@ class Task(TimeStampedModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     deadline= models.DateTimeField(blank=True,)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+@receiver(post_save, sender=User)
+def save_resume_text(sender, instance, **kwargs):
+    if instance.resume_file:
+        resume_file = str(instance.resume_file.path)  # Get the full path of the resume file
+        resume_text = convert_file_to_text(resume_file)
+        
+        # Check if resume_text has changed
+        if instance.resume_text != resume_text:
+            print("I am here again")
+            instance.resume_text = resume_text
+            instance.save()  # Save the instance to persist the changes
