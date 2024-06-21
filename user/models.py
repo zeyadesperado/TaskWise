@@ -44,7 +44,7 @@ class Project(TimeStampedModel):
     description = models.TextField()
     leader = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     deadline = models.DateTimeField(blank=True, null=True)
-    memebers = models.ManyToManyField(User, related_name='projects', blank=True)
+    members = models.ManyToManyField(User, related_name='projects', blank=True)
 
 class Task(TimeStampedModel):
     name = models.CharField(max_length=250)

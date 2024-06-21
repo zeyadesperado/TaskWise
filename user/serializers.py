@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from . import models
+from .models import User, Project
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model=models.User
+        model=User
         fields=['id','email','name','password']
         extra_kwargs={
             'password':{
@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
             }
         }
     def create(self, validated_data):
-        user = models.User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
         return user
     def update(self,instance,validated_data):
         if 'password' in validated_data:
@@ -48,16 +48,45 @@ class AuthTokenSerializer(serializers.Serializer):
         return attrs
 
 class ProjectSerializer(serializers.ModelSerializer):
-    # memebers by email
-    # in get or retrieve only for related user
-    leader = UserSerializer(required = False)
+    leader = UserSerializer(read_only=True)
+    members = serializers.ListField(
+        child=serializers.EmailField(),
+        write_only=True,
+        required=False
+    )
+    members_detail = UserSerializer(source='members', many=True, read_only=True)
+    deadline = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
+    created = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
+
     class Meta:
-        model = models.Project
-        fields = ['id', "name", "description", "leader", "deadline", "memebers", "created"]
+        model = Project
+        fields = ['id', 'name', 'description', 'leader', 'deadline', 'members', 'members_detail', 'created']
+        read_only_fields = ['leader']
 
     def create(self, validated_data):
-            # Set the 'leader' field to the current authenticated user
-            validated_data['leader'] = self.context['request'].user
-            project = models.Project.objects.create(**validated_data)
-            return project
+        members_emails = validated_data.pop('members', [])
+        project = Project.objects.create(**validated_data)
+        members = []
+        for email in members_emails:
+            try:
+                user = User.objects.get(email=email)
+                members.append(user)
+            except User.DoesNotExist:
+                raise serializers.ValidationError(f"User with email '{email}' does not exist.")
+        project.members.set(members)
+        return project
 
+    def update(self, instance, validated_data):
+        members_emails = validated_data.pop('members', None)
+        if members_emails is not None:
+            members = []
+            for email in members_emails:
+                try:
+                    user = User.objects.get(email=email)
+                    members.append(user)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError(f"User with email '{email}' does not exist.")
+            instance.members.set(members)
+            instance.save()
+            return instance
+        return super().update(instance, validated_data)
