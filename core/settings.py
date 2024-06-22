@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user',
-    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
@@ -85,6 +85,7 @@ DATABASES = {
     'default': {
         # 'URL':os.environ.get('DATABASE_URL'),
         'ENGINE': 'django.db.backends.postgresql',
+        "DATABASE_URL": os.environ.get("DATABASE_URL"),
         'NAME': os.environ.get("DATABASE_NAME"),
         'USER': os.environ.get("DATABASE_USER"),
         'PASSWORD': os.environ.get("DATABASE_PASSWORD"),
@@ -129,14 +130,17 @@ CORS_ALLOW_METHODS = [
 
 CORS_ALLOW_HEADERS = [
     "accept",
-    "accept-encoding",
     "authorization",
     "content-type",
-    "dnt",
-    "origin",
+    'api_key',
+    'Authorization',
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "ngrok-skip-browser-warning"
+    'accept-encoding',
+    'dnt',
+    'origin',
 ]
 
 # Internationalization
@@ -144,7 +148,7 @@ CORS_ALLOW_HEADERS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Cairo'
 
 USE_I18N = True
 
