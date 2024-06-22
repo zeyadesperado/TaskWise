@@ -81,7 +81,7 @@ load_dotenv('.env') #had to do this
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 DATABASES = {
     'default': {
-        'URL':os.environ.get('DATABASE_URL'),
+        # 'URL':os.environ.get('DATABASE_URL'),
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("DATABASE_NAME"),
         'USER': os.environ.get("DATABASE_USER"),
