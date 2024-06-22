@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-l!4$#_pq@v@ej!*74lmcd@4443txk)j+^s!3z4ll-z)(kjo@ei
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -107,6 +107,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.up.railway.app",
+    "http://localhost:8000",
+]
+CORS_ALLOWED_ORIGINS = [
+    'https://*-production.up.railway.app',
+]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -147,3 +155,5 @@ SWAGGER_SETTINGS = {
 }
 MEDIA_ROOT = BASE_DIR/'media'
 MEDIA_URL = '/media/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT =os.path.join(BASE_DIR, 'staticfiles')

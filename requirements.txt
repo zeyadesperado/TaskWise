@@ -10,3 +10,4 @@ pillow
 drf-yasg==1.21.7
 setuptools
 gunicorn==22.0.0
+django-cors-headers==4.4.0
