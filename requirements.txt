@@ -9,3 +9,4 @@ pymupdf
 pillow
 drf-yasg==1.21.7
 setuptools
+gunicorn==22.0.0
