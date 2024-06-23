@@ -42,8 +42,8 @@ class User(AbstractBaseUser,PermissionsMixin):
     REQUIRED_FIELDS = ('name',)
     def __str__(self):
         return self.name
-        
-    
+
+
 
 class Project(TimeStampedModel):
     name = models.CharField(max_length=250)
@@ -64,7 +64,7 @@ def save_resume_text(sender, instance, **kwargs):
     if instance.resume_file:
         resume_file = str(instance.resume_file.path)  # Get the full path of the resume file
         resume_text = convert_file_to_text(resume_file)
-        
+
         # Check if resume_text has changed
         if instance.resume_text != resume_text:
             print("Coneverting to resume_text...")
