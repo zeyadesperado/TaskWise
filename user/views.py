@@ -6,15 +6,14 @@ from rest_framework.generics import mixins
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from user.permissions import IsLeader
-from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer
-from .models import User, Project
+from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer
+from .models import User, Project, Task
 from rest_framework.parsers import MultiPartParser,FormParser
 
 
 class CreateUserView(generics.CreateAPIView):
     """View for creating user"""
     serializer_class = UserSerializer
-
 
 class UserLoginApiView(ObtainAuthToken):
     """View for loginning in and token"""
@@ -30,8 +29,7 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         """Retrive and return the authenticated user"""
-        return self.request.user
-
+        return self.request.user 
 
 class ProjectViewSet(viewsets.ModelViewSet):
     """Viewset for project"""
@@ -50,3 +48,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Project.objects.filter(
             Q(leader=user) | Q(members=user)
         ).distinct()
+
+class TaskViewSet(viewsets.ModelViewSet):
+    serializer_class=TaskSerializer
+    queryset=Task.objects.all()
+
+class UserTasksViewSets(mixins.ListModelMixin):
+    serializer_class=TaskSerializer
+    def get_queryset(self):
+        user=self.request.user
+    

@@ -56,9 +56,8 @@ class Task(TimeStampedModel):
     name = models.CharField(max_length=250)
     description= models.TextField()
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    deadline= models.DateTimeField(blank=True,)
+    deadline= models.DateTimeField(blank=True,null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-
 
 @receiver(post_save, sender=User)
 def save_resume_text(sender, instance, **kwargs):
@@ -68,6 +67,6 @@ def save_resume_text(sender, instance, **kwargs):
         
         # Check if resume_text has changed
         if instance.resume_text != resume_text:
-            print("I am here again")
+            print("Coneverting to resume_text...")
             instance.resume_text = resume_text
             instance.save()  # Save the instance to persist the changes

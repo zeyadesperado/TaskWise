@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project
+from .models import User, Project, Task
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
@@ -108,3 +108,13 @@ class ProjectSerializer(serializers.ModelSerializer):
             instance.save()
             return instance
         return super().update(instance, validated_data)
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Task
+        fields = ['name','description','project','deadline','user']
+
+
+
+
+

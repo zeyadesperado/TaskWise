@@ -4,6 +4,7 @@ from django.urls import path,include
 
 router = DefaultRouter()
 router.register('project', views.ProjectViewSet)
+router.register('task', views.TaskViewSet)
 urlpatterns = [
     path('login/',views.UserLoginApiView.as_view()),
     path('create/', views.CreateUserView.as_view()),
