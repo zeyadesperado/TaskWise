@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework import viewsets, generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.generics import mixins
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from user.permissions import IsLeader
@@ -49,12 +49,34 @@ class ProjectViewSet(viewsets.ModelViewSet):
             Q(leader=user) | Q(members=user)
         ).distinct()
 
+
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class=TaskSerializer
     queryset=Task.objects.all()
-
-class UserTasksViewSets(mixins.ListModelMixin):
-    serializer_class=TaskSerializer
-    def get_queryset(self):
-        user=self.request.user
-    
+    def list(self,request,*args, **kwargs):
+        email = request.query_params.get('email')
+        projectID = request.query_params.get('projectID')
+        
+        if not email and not projectID:
+            return Response({"Detail": "Email or projectID parameter is required"})
+        if email and projectID:
+            try:
+                user=User.objects.get(email=email)
+                project=Project.objects.get(id=projectID)
+            except User.DoesNotExist or Project.DoesNotExist:
+                return Response({"Detail":"User or project not found"})
+            tasks=Task.objects.filter(user=user,project=project)
+        elif email:
+            try:
+                user=User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response({"Detail":"User not found"})
+            tasks=Task.objects.filter(user=user)
+        elif projectID:
+            try:
+                project=Project.objects.get(id=projectID)
+            except Project.DoesNotExist:
+                return Response({"Detail":"Project not found"})
+            tasks=Task.objects.filter(project=project)
+        serializer = self.get_serializer(tasks, many=True)
+        return Response(serializer.data)
