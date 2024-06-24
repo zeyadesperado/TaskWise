@@ -4,7 +4,7 @@ import fitz  # PyMuPDF
 from PIL import Image
 
 # Set the path to Tesseract executable
-tess.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"  # Modify this path as needed
+tess.pytesseract.tesseract_cmd = r"Tesseract-OCR\tesseract.exe"  # Modify this path as needed
 
 def check_file_type(extension):
     """Return the file type based on the extension."""
