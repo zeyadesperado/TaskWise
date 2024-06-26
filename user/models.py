@@ -42,7 +42,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     REQUIRED_FIELDS = ('name',)
     def __str__(self):
         return self.name
-
+    
 
 
 class Project(TimeStampedModel):
@@ -58,6 +58,13 @@ class Task(TimeStampedModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     deadline= models.DateTimeField(blank=True,null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class Comment(TimeStampedModel):
+    """comment for the project with userID and projectID and the comment it self with creationTime"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project,on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField()
 
 @receiver(post_save, sender=User)
 def save_resume_text(sender, instance, **kwargs):

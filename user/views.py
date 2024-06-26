@@ -5,9 +5,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
-from user.permissions import IsLeader
-from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer
-from .models import User, Project, Task
+from user.permissions import IsLeader, IsCommentOwnerOrleader
+from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer,CommentSerializer
+from .models import User, Project, Task, Comment
 from rest_framework.parsers import MultiPartParser,FormParser
 
 
@@ -47,7 +47,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return Project.objects.filter(
             Q(leader=user) | Q(members=user)
-        ).distinct()
+        ).distinct().prefetch_related('comments')
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -80,3 +80,18 @@ class TaskViewSet(viewsets.ModelViewSet):
             tasks=Task.objects.filter(project=project)
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
+
+
+class CommentViewset(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated,IsCommentOwnerOrleader]
+    authentication_classes = [TokenAuthentication]
+    def perform_create(self,serializer):
+        print("Headers: ", self.request.headers)
+        """save the user with the authenticated user"""
+        serializer.save(user=self.request.user)
+    
+
+
+

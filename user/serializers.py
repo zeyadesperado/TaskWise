@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, Task
+from .models import User, Project, Task,Comment
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
@@ -65,6 +65,13 @@ class AuthTokenSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+class CommentSerializer(serializers.ModelSerializer):
+    user=UserSerializer(read_only=True)
+    class Meta:
+        model=Comment
+        fields = ['id', 'text', 'user', 'project', 'created']
+        read_only_fields=['user','created']
+
 class ProjectSerializer(serializers.ModelSerializer):
     leader = UserSerializer(read_only=True)
     members = serializers.ListField(
@@ -75,10 +82,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     members_detail = UserSerializer(source='members', many=True, read_only=True)
     deadline = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
     created = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
-
+    comments = CommentSerializer(many=True, read_only=True)
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'leader', 'deadline', 'members', 'members_detail', 'created']
+        fields = ['id', 'name', 'description', 'leader', 'deadline', 'members', 'members_detail', 'created','comments']
         read_only_fields = ['leader']
 
     def create(self, validated_data):
@@ -113,3 +120,5 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model=Task
         fields = ['name','description','project','deadline','user']
+
+
