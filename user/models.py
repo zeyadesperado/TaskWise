@@ -28,7 +28,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
-    resume_text = models.TextField(blank=True)
+    resume_text = models.TextField(blank=True, null=True)
     resume_file = models.FileField(upload_to='resumes/',null=True,blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -42,7 +42,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     REQUIRED_FIELDS = ('name',)
     def __str__(self):
         return self.name
-    
+
 
 
 class Project(TimeStampedModel):
