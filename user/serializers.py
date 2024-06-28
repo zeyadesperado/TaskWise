@@ -125,7 +125,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                 except User.DoesNotExist:
                     raise serializers.ValidationError(f"User with email '{email}' does not exist.")
             instance.members.set(members)
-        instance.save()
+        instance = super().update(instance, validated_data)
         return instance
 
 
