@@ -2,6 +2,11 @@ from rest_framework import serializers
 from .models import User, Project, Task,Comment, ToDoItem, ToDoList
 from django.contrib.auth import authenticate
 
+class BaseTimeStampedModel(serializers.ModelSerializer):
+    created = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
+    modified = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model=User
@@ -22,6 +27,11 @@ class UserSerializer(serializers.ModelSerializer):
             password= validated_data.pop('password')
             instance.set_password(password)
         return super().update(instance,validated_data)
+
+class UserViewOnlySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields=['id','email','name',]
 
 
 class AuthTokenSerializer(serializers.Serializer):
@@ -55,10 +65,11 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'user', 'project', 'created']
         read_only_fields=['user','created']
 
-class TaskSerializer(serializers.ModelSerializer):
+class TaskSerializer(BaseTimeStampedModel):
+    user = UserViewOnlySerializer(read_only=True)
     class Meta:
-        model=Task
-        fields = ['id','name','description','project','finished','deadline','user']
+        model = Task
+        fields = ['id','name','description','project','finished','deadline','user','created','modified']
     def update(self, instance, validated_data):
         validated_data.pop('user', None)  # Prevent 'user' from being updated
         validated_data.pop('project', None)  # Prevent 'project' from being updated
@@ -84,7 +95,7 @@ class ManageUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         return super().update(instance,validated_data)
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectSerializer(BaseTimeStampedModel):
     leader = UserSerializer(read_only=True)
     members = serializers.ListField(
         child=serializers.EmailField(),
@@ -93,7 +104,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     )
     members_detail = UserSerializer(source='members', many=True, read_only=True)
     deadline = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
-    created = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
     comments = CommentSerializer(many=True, read_only=True)
     tasks = TaskSerializer(many=True,read_only=True)
     class Meta:
@@ -129,16 +139,17 @@ class ProjectSerializer(serializers.ModelSerializer):
         return instance
 
 
-class ToDoListSerializer(serializers.ModelSerializer):
-    """serializer for the to do list"""
-    owner = UserSerializer
-    class meta:
-        model = ToDoList
+class ToDoItemSerializer(BaseTimeStampedModel):
+    due_date = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
+    class Meta:
+        model = ToDoItem
         fields = "__all__"
 
 
-class ToDoItemSerializer(serializers.ModelSerializer):
-    todo_list = ToDoListSerializer
+class ToDoListSerializer(BaseTimeStampedModel):
+    """serializer for the to do list"""
+    owner = UserViewOnlySerializer(read_only=True)
+    items = ToDoItemSerializer(many=True)
     class Meta:
-        model = ToDoItem
+        model = ToDoList
         fields = "__all__"

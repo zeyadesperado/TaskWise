@@ -52,8 +52,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    serializer_class=TaskSerializer
-    queryset=Task.objects.all()
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
     permission_classes = [IsAuthenticated, IsTaskOwnerOrLeader]
     authentication_classes = [TokenAuthentication]
     def create(self, request, *args, **kwargs):
@@ -110,17 +110,17 @@ class ToDoListViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
-    def perform_create(self, serializer):
-        serializer.save(owner = self.request.user)
-
     def get_queryset(self):
-        """Filter queryset to authenticated users."""
-        return self.queryset.filter(owner=self.request.user).order_by('-name')
+        return ToDoList.objects.filter(owner=self.request.user).order_by('-name')
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 class ToDoItemViewSet(viewsets.ModelViewSet):
     queryset = ToDoItem.objects.all()
     serializer_class = ToDoItemSerializer
     permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def get_queryset(self):
         """Return to-do items for the authenticated user."""
