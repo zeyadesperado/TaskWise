@@ -34,7 +34,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-    picture = models.ImageField(upload_to='prictures/', null=True, blank=True)
+    picture = models.ImageField(upload_to='pictures/', null=True, blank=True)
     #Setting the manager class to UserManager
     objects= UserManager()
     #Setting the email to be the unique identifier for authentication
