@@ -55,9 +55,10 @@ class Project(TimeStampedModel):
 class Task(TimeStampedModel):
     name = models.CharField(max_length=250)
     description= models.TextField()
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     deadline= models.DateTimeField(blank=True,null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    finished = models.BooleanField(default=False)  
+    project = models.ForeignKey(Project, on_delete=models.CASCADE,related_name='tasks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='tasks')
 
 
 class Comment(TimeStampedModel):

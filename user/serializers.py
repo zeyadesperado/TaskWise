@@ -23,23 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         return super().update(instance,validated_data)
 
-class ManageUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=User
-        fields=['id','email','name','password','resume_file']
-        extra_kwargs={
-            'password':{
-                'write_only':True,
-                'style':{
-                    'input_type':'password'
-                }
-            }
-        }
-    def update(self,instance,validated_data):
-        if 'password' in validated_data:
-            password= validated_data.pop('password')
-            instance.set_password(password)
-        return super().update(instance,validated_data)
 
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user auth token."""
@@ -72,6 +55,35 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'user', 'project', 'created']
         read_only_fields=['user','created']
 
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Task
+        fields = ['id','name','description','project','finished','deadline','user']
+    def update(self, instance, validated_data):
+        validated_data.pop('user', None)  # Prevent 'user' from being updated
+        validated_data.pop('project', None)  # Prevent 'project' from being updated
+        return super().update(instance, validated_data)
+    
+
+class ManageUserSerializer(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True,read_only=True)
+    class Meta:
+        model=User
+        fields=['id','email','name','password','resume_file','tasks']
+        extra_kwargs={
+            'password':{
+                'write_only':True,
+                'style':{
+                    'input_type':'password'
+                }
+            }
+        }
+    def update(self,instance,validated_data):
+        if 'password' in validated_data:
+            password= validated_data.pop('password')
+            instance.set_password(password)
+        return super().update(instance,validated_data)
+
 class ProjectSerializer(serializers.ModelSerializer):
     leader = UserSerializer(read_only=True)
     members = serializers.ListField(
@@ -83,9 +95,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     deadline = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
     created = serializers.DateTimeField(format='%d/%m/%Y %H:%M', required=False)
     comments = CommentSerializer(many=True, read_only=True)
+    tasks = TaskSerializer(many=True,read_only=True)
     class Meta:
         model = Project
-        fields = ['id', 'name', 'description', 'leader', 'deadline', 'members', 'members_detail', 'created','comments']
+        fields = ['id', 'name', 'description', 'leader', 'deadline', 'members', 'members_detail', 'created','comments','tasks']
         read_only_fields = ['leader']
 
     def create(self, validated_data):
@@ -116,9 +129,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             return instance
         return super().update(instance, validated_data)
 
-class TaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=Task
-        fields = ['name','description','project','deadline','user']
+
 
 
