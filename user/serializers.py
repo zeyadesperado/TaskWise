@@ -63,13 +63,13 @@ class TaskSerializer(serializers.ModelSerializer):
         validated_data.pop('user', None)  # Prevent 'user' from being updated
         validated_data.pop('project', None)  # Prevent 'project' from being updated
         return super().update(instance, validated_data)
-    
+
 
 class ManageUserSerializer(serializers.ModelSerializer):
     tasks = TaskSerializer(many=True,read_only=True)
     class Meta:
         model=User
-        fields=['id','email','name','password','resume_file','tasks']
+        fields=['id','email','name','password','resume_file','tasks','picture']
         extra_kwargs={
             'password':{
                 'write_only':True,
