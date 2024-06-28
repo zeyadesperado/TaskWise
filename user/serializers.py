@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Project, Task,Comment
+from .models import User, Project, Task,Comment, ToDoItem, ToDoList
 from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
@@ -125,10 +125,20 @@ class ProjectSerializer(serializers.ModelSerializer):
                 except User.DoesNotExist:
                     raise serializers.ValidationError(f"User with email '{email}' does not exist.")
             instance.members.set(members)
-            instance.save()
-            return instance
-        return super().update(instance, validated_data)
+        instance.save()
+        return instance
 
 
+class ToDoListSerializer(serializers.ModelSerializer):
+    """serializer for the to do list"""
+    owner = UserSerializer
+    class meta:
+        model = ToDoList
+        fields = "__all__"
 
 
+class ToDoItemSerializer(serializers.ModelSerializer):
+    todo_list = ToDoListSerializer
+    class Meta:
+        model = ToDoItem
+        fields = "__all__"

@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from user.permissions import IsLeader, IsCommentOwnerOrleader,IsTaskOwnerOrLeader
-from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer,CommentSerializer
-from .models import User, Project, Task, Comment
+from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer,CommentSerializer, ToDoListSerializer, ToDoItemSerializer
+from .models import User, Project, Task, Comment, ToDoItem, ToDoList
 from rest_framework.parsers import MultiPartParser,FormParser
 
 
@@ -68,7 +68,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if project.leader != request.user:
             return Response({"detail": "Only the project leader can create tasks for this project."},
                             status=status.HTTP_403_FORBIDDEN)
-        
+
         #check if the user is a member or a leader of the project
         assigned_user_id = request.data.get('user')
         try:
@@ -85,11 +85,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        
+
     def get_queryset(self):
         user = self.request.user
         if self.action == 'list':
-            return Task.objects.filter(user=user).distinct()    
+            return Task.objects.filter(user=user).distinct()
         return Task.objects.filter(Q(user=user) | Q(project__leader=user)).distinct()
 
 
@@ -99,10 +99,29 @@ class CommentViewset(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated,IsCommentOwnerOrleader]
     authentication_classes = [TokenAuthentication]
     def perform_create(self,serializer):
-        print("Headers: ", self.request.headers)
+        # print("Headers: ", self.request.headers)
         """save the user with the authenticated user"""
         serializer.save(user=self.request.user)
-    
 
 
+class ToDoListViewSet(viewsets.ModelViewSet):
+    queryset = ToDoList.objects.all()
+    serializer_class = ToDoListSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
+    def perform_create(self, serializer):
+        serializer.save(owner = self.request.user)
+
+    def get_queryset(self):
+        """Filter queryset to authenticated users."""
+        return self.queryset.filter(owner=self.request.user).order_by('-name')
+
+class ToDoItemViewSet(viewsets.ModelViewSet):
+    queryset = ToDoItem.objects.all()
+    serializer_class = ToDoItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Return to-do items for the authenticated user."""
+        return self.queryset.filter(todo_list__owner=self.request.user)
