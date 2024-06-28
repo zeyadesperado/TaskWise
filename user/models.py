@@ -29,11 +29,12 @@ class User(AbstractBaseUser,PermissionsMixin):
     name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     resume_text = models.TextField(blank=True, null=True)
-    resume_file = models.FileField(upload_to='resumes/',null=True,blank=True)
+    resume_file = models.FileField(upload_to='resumes/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
+    picture = models.ImageField(upload_to='prictures/', null=True, blank=True)
     #Setting the manager class to UserManager
     objects= UserManager()
     #Setting the email to be the unique identifier for authentication
@@ -56,7 +57,7 @@ class Task(TimeStampedModel):
     name = models.CharField(max_length=250)
     description= models.TextField()
     deadline= models.DateTimeField(blank=True,null=True)
-    finished = models.BooleanField(default=False)  
+    finished = models.BooleanField(default=False)
     project = models.ForeignKey(Project, on_delete=models.CASCADE,related_name='tasks')
     user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='tasks')
 
