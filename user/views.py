@@ -10,7 +10,7 @@ from user.permissions import IsLeader, IsCommentOwnerOrleader,IsTaskOwnerOrLeade
 from .serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer,CommentSerializer, ToDoListSerializer, ToDoItemSerializer,UserViewOnlySerializer
 from .models import User, Project, Task, Comment, ToDoItem, ToDoList
 from rest_framework.parsers import MultiPartParser,FormParser
-from user.task_recommendation import process_resumes_and_task
+# from user.task_recommendation import process_resumes_and_task
 
 class CreateUserView(generics.CreateAPIView):
     """View for creating user"""
