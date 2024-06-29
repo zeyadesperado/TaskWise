@@ -12,7 +12,7 @@ urlpatterns = [
     path('login/',views.UserLoginApiView.as_view()),
     path('create/', views.CreateUserView.as_view()),
     path('manage/', views.ManageUserView.as_view()),
-
+    path('recommend/', views.TaskRecommendation, name='TaskRecommendation'),
     path('',include(router.urls)),
 ]
 

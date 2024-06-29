@@ -3,13 +3,14 @@ from rest_framework import viewsets, generics,status
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
+from rest_framework.decorators import api_view,permission_classes,authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.settings import api_settings
 from user.permissions import IsLeader, IsCommentOwnerOrleader,IsTaskOwnerOrLeader
-from.serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer,CommentSerializer, ToDoListSerializer, ToDoItemSerializer
+from .serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,ManageUserSerializer,TaskSerializer,CommentSerializer, ToDoListSerializer, ToDoItemSerializer,UserViewOnlySerializer
 from .models import User, Project, Task, Comment, ToDoItem, ToDoList
 from rest_framework.parsers import MultiPartParser,FormParser
-
+from user.task_recommendation import process_resumes_and_task
 
 class CreateUserView(generics.CreateAPIView):
     """View for creating user"""
@@ -49,7 +50,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Project.objects.filter(
             Q(leader=user) | Q(members=user)
         ).distinct().prefetch_related('comments').prefetch_related('tasks')
-
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
@@ -92,7 +92,6 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Task.objects.filter(user=user).distinct()
         return Task.objects.filter(Q(user=user) | Q(project__leader=user)).distinct()
 
-
 class CommentViewset(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -102,7 +101,6 @@ class CommentViewset(viewsets.ModelViewSet):
         # print("Headers: ", self.request.headers)
         """save the user with the authenticated user"""
         serializer.save(user=self.request.user)
-
 
 class ToDoListViewSet(viewsets.ModelViewSet):
     queryset = ToDoList.objects.all()
@@ -125,3 +123,54 @@ class ToDoItemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return to-do items for the authenticated user."""
         return self.queryset.filter(todo_list__owner=self.request.user)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])  
+@authentication_classes([TokenAuthentication])
+def TaskRecommendation(request):
+    try:
+        project_id = request.data.get('project_id')  
+        task_text = request.data.get('task')
+
+        project = Project.objects.get(pk=project_id)
+        
+        # Ensure the authenticated user is the leader of the project
+        if request.user != project.leader:
+            return Response({"detail": "Only the project leader can access this endpoint."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # Fetch resumes for project members or candidates
+        resumes = fetch_resumes(project.members.all())
+
+        # Check if resumes is None (indicating less than two valid resumes)
+        if resumes is None:
+            return Response({"detail": "There are fewer than two valid resumes available."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        #compine the resumes
+        formatted_resumes = ''.join(resumes)
+
+        # Process resumes and task description
+        response = process_resumes_and_task(formatted_resumes, task_text)
+        
+        users=User.objects.filter(Q(email="bobs@example.com")|Q(email="bebo@example.com")) #temp
+        serialized_users = UserViewOnlySerializer(users, many=True).data #temp
+        return Response({"users": serialized_users,"explain":"an explain"})
+        
+    except Project.DoesNotExist:
+        return Response({"detail": "Project does not exist."},
+                        status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+def fetch_resumes(members):
+    resumes = []
+    for idx, member in enumerate(members, start=1):
+        resume_text = member.resume_text
+        if resume_text and resume_text.strip():  # Check if resume_text is not None and not empty after stripping whitespace
+            resumes.append(f"Resume {idx}:\n{resume_text}\n")
+
+    # Check if there are at least two valid resumes
+    if len(resumes) < 2:
+        return None
+    return resumes
