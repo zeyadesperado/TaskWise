@@ -11,15 +11,19 @@ from .serializers import UserSerializer, AuthTokenSerializer, ProjectSerializer,
 from .models import User, Project, Task, Comment, ToDoItem, ToDoList
 from rest_framework.parsers import MultiPartParser,FormParser
 from user.task_recommendation import process_resumes_and_task
+import google.generativeai as genai
+import os
 
 class CreateUserView(generics.CreateAPIView):
     """View for creating user"""
     serializer_class = UserSerializer
 
+
 class UserLoginApiView(ObtainAuthToken):
     """View for loginning in and token"""
     serializer_class = AuthTokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
 
 class ManageUserView(generics.RetrieveUpdateAPIView):
     """Manage the authenticated user."""
@@ -32,6 +36,7 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
         """Retrive and return the authenticated user"""
         user = self.request.user
         return User.objects.prefetch_related('tasks').get(pk=user.pk)
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
     """Viewset for project"""
@@ -124,53 +129,62 @@ class ToDoItemViewSet(viewsets.ModelViewSet):
         """Return to-do items for the authenticated user."""
         return self.queryset.filter(todo_list__owner=self.request.user)
 
+
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  
+@permission_classes([IsAuthenticated])
 @authentication_classes([TokenAuthentication])
-def TaskRecommendation(request):
+def task_recommendation(request):
     try:
-        project_id = request.data.get('project_id')  
-        task_text = request.data.get('task')
+        project_id = request.data.get('project_id')
+        task_description = request.data.get('task_description')
 
         project = Project.objects.get(pk=project_id)
-        
-        # Ensure the authenticated user is the leader of the project
+
         if request.user != project.leader:
-            return Response({"detail": "Only the project leader can access this endpoint."},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Only the project leader can access this endpoint."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Fetch resumes for project members or candidates
-        resumes = fetch_resumes(project.members.all())
+        members = project.members.all()
+        if not members:
+            return Response({"detail": "No members found in the project."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if resumes is None (indicating less than two valid resumes)
-        if resumes is None:
-            return Response({"detail": "There are fewer than two valid resumes available."},
-                            status=status.HTTP_400_BAD_REQUEST)
-        
-        #compine the resumes
-        formatted_resumes = ''.join(resumes)
+        resumes = "\n".join([f"Resume {i+1}: {member.resume_text}" for i, member in enumerate(members)])
 
-        # Process resumes and task description
-        response = process_resumes_and_task(formatted_resumes, task_text)
-        
-        users=User.objects.filter(Q(email="bobs@example.com")|Q(email="bebo@example.com")) #temp
-        serialized_users = UserViewOnlySerializer(users, many=True).data #temp
-        return Response({"users": serialized_users,"explain":"an explain"})
-        
+        prompt = f"""
+                    Please review the following resumes:
+                    {resumes}
+                    Considering the task description below:
+                    {task_description}
+                    Identify the resume number and the name of the candidate that best matches the task requirements. If no suitable match is found, state that no suitable resume is available.
+                    Response format:
+                    1. Resume number: [number], Name: [name]
+                    2. Additional comments or reasoning
+                    Please provide your response in plain text format without any Markdown formatting.
+                    """
+
+        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+        model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
+        response = model.generate_content(prompt)
+
+        # Access the text content from the response
+        text_content = ""  # Initialize to empty string to handle potential errors gracefully
+        if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+             text_content = response.candidates[0].content.parts[0].text
+
+        return Response({"recommendation": text_content}, status=status.HTTP_200_OK)
+
     except Project.DoesNotExist:
-        return Response({"detail": "Project does not exist."},
-                        status=status.HTTP_404_NOT_FOUND)
+        return Response({"detail": "Project not found."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-def fetch_resumes(members):
-    resumes = []
-    for idx, member in enumerate(members, start=1):
-        resume_text = member.resume_text
-        if resume_text and resume_text.strip():  # Check if resume_text is not None and not empty after stripping whitespace
-            resumes.append(f"Resume {idx}:\n{resume_text}\n")
+# def fetch_resumes(members):
+#     resumes = []
+#     for idx, member in enumerate(members, start=1):
+#         resume_text = member.resume_text
+#         if resume_text and resume_text.strip():  # Check if resume_text is not None and not empty after stripping whitespace
+#             resumes.append(f"Resume {idx}:\n{resume_text}\n")
 
-    # Check if there are at least two valid resumes
-    if len(resumes) < 2:
-        return None
-    return resumes
+#     # Check if there are at least two valid resumes
+#     if len(resumes) < 2:
+#         return None
+#     return resumes

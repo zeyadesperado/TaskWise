@@ -35,25 +35,35 @@ prompt = PromptTemplate(
 
 #llm = OpenAI(temperature=0.5, api_key=api_key)
 
+import requests
+
 def process_resumes_and_task(resumes, task):
     """
-    Processes the given resumes and task to find the best match.
+    Processes the given resumes and task to find the best match using Gemini AI API.
 
     Parameters:
     resumes (str): A string containing the resumes.
     task (str): A string containing the task description.
 
     Returns:
-    str: The response from the OpenAI API.
+    dict: The response from the Gemini AI API.
     """
-    return "YOU ARE DOING RIGHT"
-    # try:
-    #     formatted_prompt = prompt.format(RESUMES=resumes, TASK=task)
-    #     response = llm.invoke(formatted_prompt)
-    #     return response
-    # except Exception as e:
-    #     return f"An error occurred: {e}"
+    try:
+        formatted_prompt = prompt.format(RESUMES=resumes, TASK=task)
 
+        # Send request to Gemini AI API
+        api_key = os.environ.get("GEMINI_API_KEY")
+        response = requests.post(
+            "https://api.gemini.com/v1/analyze",
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={"prompt": formatted_prompt}
+        )
+
+        response.raise_for_status()
+        return response.json()
+
+    except Exception as e:
+        return {"error": str(e)}
 
 
 ######################THE NEXT IS FOR TESING######################
@@ -62,7 +72,7 @@ def process_resumes_and_task(resumes, task):
 # Resume 1: John Doe
 # Title: Software Engineer
 # Experience: 5 years
-# Skills: 
+# Skills:
 # - Full-stack development
 # - Python, JavaScript, SQL
 # - Django, React, PostgreSQL
@@ -127,7 +137,7 @@ def process_resumes_and_task(resumes, task):
 # """
 
 
-# task = """Develop a web application for an e-commerce platform. 
+# task = """Develop a web application for an e-commerce platform.
 # - Requirements: Build the front-end and back-end using modern web technologies, set up a PostgreSQL database, and implement user authentication and payment processing."""
 # result = process_resumes_and_task(resumes, task)
 # print("The resume that can do this task is:")
