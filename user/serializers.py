@@ -149,7 +149,7 @@ class ToDoItemSerializer(BaseTimeStampedModel):
 class ToDoListSerializer(BaseTimeStampedModel):
     """serializer for the to do list"""
     owner = UserViewOnlySerializer(read_only=True)
-    items = ToDoItemSerializer(many=True)
+    items = ToDoItemSerializer(many=True, read_only=True)
     class Meta:
         model = ToDoList
         fields = "__all__"

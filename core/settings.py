@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'user',
+    'django_extensions',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
@@ -167,6 +168,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL= 'user.User'
 
+GRAPH_MODELS ={
+    'all_applications': True,
+    'graph_models': True,
+     }
 
 SWAGGER_SETTINGS = {
    'SECURITY_DEFINITIONS': {
