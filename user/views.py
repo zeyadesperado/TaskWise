@@ -85,11 +85,21 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({"detail": "The assigned user must be a member of the project."},
                             status=status.HTTP_403_FORBIDDEN)
 
+        # Set the user field for the task explicitly
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        task = serializer.save(user=assigned_user,project=project)
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+        # serializer = self.get_serializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # print("******************************") #testing line 1
+        # self.perform_create(serializer)
+        # print("------------------------------") #testing line 2
+        # headers = self.get_success_headers(serializer.data)
+        # return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def get_queryset(self):
         user = self.request.user
@@ -103,7 +113,6 @@ class CommentViewset(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated,IsCommentOwnerOrleader]
     authentication_classes = [TokenAuthentication]
     def perform_create(self,serializer):
-        # print("Headers: ", self.request.headers)
         """save the user with the authenticated user"""
         serializer.save(user=self.request.user)
 

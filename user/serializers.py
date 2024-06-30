@@ -34,6 +34,7 @@ class UserViewOnlySerializer(serializers.ModelSerializer):
         fields=['id','email','name',]
 
 
+
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user auth token."""
     email = serializers.EmailField()
@@ -65,8 +66,14 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'user', 'project', 'created']
         read_only_fields=['user','created']
 
+class ProjectViewOnlySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields=['id','name']
+
 class TaskSerializer(BaseTimeStampedModel):
     user = UserViewOnlySerializer(read_only=True)
+    project=ProjectViewOnlySerializer(read_only=True)
     class Meta:
         model = Task
         fields = ['id','name','description','project','finished','deadline','user','created','modified']
